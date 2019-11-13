@@ -3,28 +3,20 @@ import "./style.css";
 import {
   AppBar,
   Button,
-  Modal,
   FormControl,
-  NativeSelect,
   Typography,
   Toolbar,
-  Grid,
   Select,
   FormHelperText,
-  IconButton,
   MenuItem,
   InputLabel
 } from "@material-ui/core";
-import Input from "react-speech-recognition-input";
 import { withStyles } from "@material-ui/core/styles";
 import "react-table/react-table.css";
 import * as firebase from "firebase";
 import config from "../config.js";
 import axios from "axios";
 import MyTAble from "./table.js";
-import DateFnsUtils from "@date-io/date-fns";
-import { Call, CalendarToday, Mic, Message } from "@material-ui/icons";
-import { MuiPickersUtilsProvider, DateTimePicker } from "material-ui-pickers";
 firebase.initializeApp(config);
 const myDB = firebase.firestore();
 const url = "https://6fcdce30.ngrok.io/";
@@ -40,35 +32,16 @@ class Home extends Component {
         { label: "Status" }
       ],
       data1: [],
-      //   {
-      //     address: "Creation park residency, Trivandrum.",
-      //     name: "Shaik Abbas",
-      //     phoneNumber: "+918686642987",
-      //     status: "",
-      //     id: "Z9bzpZZXDlzYiQ4ViTnc"
-      //   },
-      //   {
-      //     address: "Creation Pard Residency, Trivandrum",
-      //     name: "Priya Darshan",
-      //     phoneNumber: "+918903272149",
-      //     status: "Busy.",
-      //     id: "Jzt79qEkZHTlHApwEejm"
-      //   }
-      // ],
       selected: [],
-      open: false,
-      open5: false,
       selectValue: "",
-      ressons: ["Traffic", "Deliver tomorrow"],
-      scheduleDate: new Date(),
-      recordedMsg: "there will be delay in delivery"
+      questions: []
     };
   }
   componentWillMount() {
     this.setState({ width: window.innerWidth });
   }
   componentDidMount() {
-    const dbref = myDB.collection("users");
+    const dbref = myDB.collection("groups");
     dbref.onSnapshot(snap => {
       let data = [];
       snap.forEach(function(doc) {
@@ -79,6 +52,16 @@ class Home extends Component {
       });
       this.setState({ data1: data });
     });
+    myDB
+      .collection("questions")
+      .doc("question")
+      .get()
+      .then(data => {
+        console.log(data.data());
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
   getdata = () => {
     return myDB
@@ -114,17 +97,7 @@ class Home extends Component {
     this.state.selected.map(item => {
       data.push(this.state.data1[item]);
     });
-    // data.map(async item => {
-    //   let result = await axios({
-    //     method: "POST",
-    //     url: url + "call",
-    //     data: item,
-    //     headers: {
-    //       "Content-Type": "application/json"
-    //     }
-    //   });
-    //   console.log(result);
-    // });
+
     axios({
       method: "POST",
       url: url + "call",
@@ -188,6 +161,7 @@ class Home extends Component {
   }
 
   render() {
+    console.log(this.state.data1);
     return (
       <div className={"homeContainer"}>
         <div className={""}>
@@ -212,9 +186,13 @@ class Home extends Component {
               <MenuItem value="">
                 <em>None</em>
               </MenuItem>
-              <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
+              {this.state.data1.map(item => {
+                return (
+                  <MenuItem value="">
+                    <em>{item["name"]}</em>
+                  </MenuItem>
+                );
+              })}
             </Select>
             <FormHelperText>Required</FormHelperText>
           </FormControl>
@@ -279,14 +257,5 @@ const mainstyle = theme => ({
     display: "block"
   }
 });
-function getModalStyle() {
-  const top = 30;
-  const left = 40;
 
-  return {
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`
-  };
-}
 export default withStyles(mainstyle)(Home);
